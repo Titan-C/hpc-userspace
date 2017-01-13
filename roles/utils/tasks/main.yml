@@ -1,0 +1,33 @@
+---
+- name: Get zsh installed version
+  command: "{{ userspace_local }}/bin/zsh --version"
+  register: zsh_installed_version
+
+- name: Force zsh install to desired version
+  set_fact:
+    zsh_install_from_source: true
+  when: zsh_installed_version.stdout |  regex_replace('^zsh ([0-9\\.]+).*$', '\\1') | version_compare(zsh_version, operator='!=')
+
+- name: Download zsh
+  get_url:
+    url: http://www.zsh.org/pub/zsh-{{ zsh_version }}.tar.xz
+    dest: ~/Downloads/zsh-{{ zsh_version }}.tar.xz
+    timeout: 60
+  when: zsh_installed_version|failed or zsh_install_from_source
+
+- name: Expand zsh archive
+  unarchive:
+    src: ~/Downloads/zsh-{{ zsh_version }}.tar.xz
+    dest: ~/builds/
+    creates: ~/builds/zsh-{{ zsh_version }}/README
+    remote_src: yes
+  when: zsh_installed_version|failed or zsh_install_from_source
+
+- name: Build zsh
+  command: chdir="~/builds/zsh-{{ zsh_version }}" {{ item }}
+
+  with_items:
+    - ./configure --prefix={{ userspace_local }}
+    - make {{ makeflags }}
+    - make install
+  when: zsh_installed_version|failed or zsh_install_from_source

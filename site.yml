@@ -1,0 +1,7 @@
+---
+- hosts: orlando
+  user: oscar
+  gather_facts: True
+
+  roles:
+    - utils
