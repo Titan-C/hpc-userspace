@@ -1,0 +1,3 @@
+---
+# default to not install until update needed
+openblas_install_from_source: false

@@ -1,0 +1,42 @@
+---
+- name: Get OpenBlas installed version
+  command: grep OPENBLAS_VERSION {{ userspace_local }}/include/openblas_config.h
+  failed_when: false
+  changed_when: false
+  register: openblas_installed_version
+
+- name: Force OpenBlas install to desired version
+  set_fact:
+    openblas_install_from_source: true
+  when: openblas_installed_version|failed or openblas_installed_version.stdout |  regex_replace('^.* OpenBLAS ([0-9\\.]+).*$', '\\1') | version_compare(openblas_version, operator='!=')
+
+- name: Download openblas
+  get_url:
+    url: http://github.com/xianyi/OpenBLAS/archive/v{{ openblas_version }}.tar.gz
+    dest: ~/Downloads/openblas-{{ openblas_version }}.tar.gz
+    timeout: 60
+  when: openblas_installed_version|failed or openblas_install_from_source
+
+- name: Expand openblas archive
+  unarchive:
+    src: ~/Downloads/openblas-{{ openblas_version }}.tar.gz
+    dest: ~/builds/
+    creates: ~/builds/OpenBLAS-{{ openblas_version }}/README.md
+    remote_src: yes
+  when: openblas_installed_version|failed or openblas_install_from_source
+
+- name: Build openblas
+  command: chdir="~/builds/OpenBLAS-{{ openblas_version }}" {{ item }}
+  with_items:
+    - make DYNAMIC_ARCH=1 FC=gfortran
+    - make PREFIX={{ userspace_local }} install
+  when: openblas_installed_version|failed or openblas_install_from_source
+
+- name: Symlinks openblas as lapack
+  file:
+    src: "libopenblas.so"
+    dest: "{{ userspace_local }}/lib/{{ item }}"
+    state: link
+  with_items:
+    - libblas.so
+    - liblapack.so

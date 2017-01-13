@@ -1,0 +1,3 @@
+---
+- include: openblas.yml
+  tags: openblas
