@@ -1,0 +1,44 @@
+---
+- name: Get Gcc installed version
+  #command: "{{ userspace_local }}/bin/gcc -v"
+  #command: "gcc --version | grep ^gcc | sed 's/^.* //g'"
+  command: gcc --version
+  failed_when: false
+  changed_when: false
+  register: gcc_installed_version
+
+- name: Force Gcc install to desired version
+  set_fact:
+    gcc_install_from_source: true
+  when: gcc_installed_version|failed or gcc_installed_version.stdout_lines[0] |  regex_replace('^gcc .GCC. ([0-9\\.]+)$', '\\1') | version_compare(gcc_version, operator='!=')
+
+- name: Expand gcc archive
+  unarchive:
+    src: ftp://ftp.uvsq.fr/pub/gcc/releases/gcc-{{ gcc_version }}/gcc-{{ gcc_version }}.tar.gz
+    dest: ~/builds/
+    creates: ~/builds/gcc-{{ gcc_version }}
+    remote_src: yes
+  when: gcc_installed_version|failed or gcc_install_from_source
+
+- name: apply sources patch
+  patch: src="gcc_prereq.patch" dest="/home/oscar/builds/gcc-{{ gcc_version }}/contrib/download_prerequisites"
+  when: gcc_installed_version|failed or gcc_install_from_source
+
+- name: Download gcc prerequisites
+  command: ./contrib/download_prerequisites chdir="~/builds/gcc-{{ gcc_version }}"
+  when: gcc_installed_version|failed or gcc_install_from_source
+
+
+- name: Build dir gcc
+  file:
+    path: "~/builds/build_gcc-{{ gcc_version }}"
+    state: directory
+    mode: 0755
+
+- name: Build gcc
+  command: chdir="~/builds/build_gcc-{{ gcc_version }}" {{ item }}
+  with_items:
+    - /home/oscar/builds/gcc-{{ gcc_version }}/configure --prefix={{ userspace_local }} --enable-checking=release --disable-multilib --enable-languages=c,c++,fortran
+    - make {{ makeflags }}
+    - make install
+  when: gcc_installed_version|failed or gcc_install_from_source
