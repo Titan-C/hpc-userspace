@@ -1,5 +1,7 @@
 ---
-- include: openblas.yml
-  tags: openblas
 - include: binutils.yml
   tags: binutils
+- include: gcc.yml
+  tags: gcc
+- include: openblas.yml
+  tags: openblas

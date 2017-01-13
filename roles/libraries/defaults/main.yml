@@ -1,4 +1,5 @@
 ---
 # default to not install until update needed
-openblas_install_from_source: false
 binutils_install_from_source: false
+gcc_install_from_source: false
+openblas_install_from_source: false
