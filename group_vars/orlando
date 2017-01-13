@@ -3,5 +3,6 @@ makeflags: -j8
 userspace_local: /home/oscar/local
 zsh_version: 5.3.1
 binutils_version: 2.27
+libiconv_version: 1.14
 gcc_version: 5.4.0
 openblas_version: 0.2.19

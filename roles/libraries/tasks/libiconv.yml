@@ -1,0 +1,14 @@
+---
+- name: Expand libiconv archive
+  unarchive:
+    src: http://ftp.gnu.org/pub/gnu/libiconv/libiconv-{{ libiconv_version }}.tar.gz
+    dest: ~/builds/
+    creates: ~/builds/libiconv-{{ libiconv_version }}
+    remote_src: yes
+
+- name: Build libiconv
+  command: chdir="~/builds/libiconv-{{ libiconv_version }}" {{ item }}
+  with_items:
+    - ./configure --prefix={{ userspace_local }}
+    - make {{ makeflags }}
+    - make install

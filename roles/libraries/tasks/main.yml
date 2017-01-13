@@ -1,6 +1,8 @@
 ---
 - include: binutils.yml
   tags: binutils
+- include: libiconv.yml
+  tags: libiconv
 - include: gcc.yml
   tags: gcc
 - include: openblas.yml
