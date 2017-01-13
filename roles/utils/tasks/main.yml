@@ -1,6 +1,8 @@
 ---
 - name: Get zsh installed version
   command: "{{ userspace_local }}/bin/zsh --version"
+  failed_when: false
+  changed_when: false
   register: zsh_installed_version
 
 - name: Force zsh install to desired version

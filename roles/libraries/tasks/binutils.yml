@@ -1,0 +1,35 @@
+---
+- name: Get Binutils installed version
+  command: "{{ userspace_local }}/bin/ld -v"
+  failed_when: false
+  changed_when: false
+  register: binutils_installed_version
+
+- name: Force Binutils install to desired version
+  set_fact:
+    binutils_install_from_source: true
+  when: binutils_installed_version|failed or binutils_installed_version.stdout |  regex_replace('^.*Binutils. ([0-9\\.]+)$', '\\1') | version_compare(binutils_version, operator='!=')
+
+- name: Download binutils
+  get_url:
+    url: http://ftp.gnu.org/gnu/binutils/binutils-{{ binutils_version }}.tar.gz
+    dest: ~/Downloads/binutils-{{ binutils_version }}.tar.gz
+    timeout: 60
+  when: binutils_installed_version|failed or binutils_install_from_source
+
+- name: Expand binutils archive
+  unarchive:
+    src: ~/Downloads/binutils-{{ binutils_version }}.tar.gz
+    dest: ~/builds/
+    creates: ~/builds/binutils-{{ binutils_version }}/README
+    remote_src: yes
+  when: binutils_installed_version|failed or binutils_install_from_source
+
+- name: Build binutils
+  command: chdir="~/builds/binutils-{{ binutils_version }}" {{ item }}
+
+  with_items:
+    - ./configure --prefix={{ userspace_local }}
+    - make {{ makeflags }}
+    - make install
+  when: binutils_installed_version|failed or binutils_install_from_source
