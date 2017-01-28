@@ -1,3 +1,4 @@
 ---
 # default to not install until update needed
 zsh_install_from_source: false
+htop_install_from_source: false

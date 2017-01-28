@@ -1,0 +1,38 @@
+---
+- name: Get Htop installed version
+  command: "{{ userspace_local }}/bin/htop -v"
+  failed_when: false
+  changed_when: false
+  register: htop_installed_version
+
+- name: Force Htop install to desired version
+  set_fact:
+    htop_install_from_source: true
+  when: htop_installed_version|failed or htop_installed_version.stdout_lines[0] |  regex_replace('^htop ([0-9\\.]+).*$', '\\1') | version_compare(htop_version, operator='!=')
+
+- name: Download htop
+  get_url:
+    url: http://hisham.hm/htop/releases/{{ htop_version }}/htop-{{ htop_version }}.tar.gz
+    dest: ~/Downloads/htop-{{ htop_version }}.tar.gz
+    timeout: 60
+  when: htop_installed_version|failed or htop_install_from_source
+
+- name: Expand htop archive
+  unarchive:
+    src: ~/Downloads/htop-{{ htop_version }}.tar.gz
+    dest: ~/builds/
+    creates: ~/builds/htop-{{ htop_version }}/README
+    remote_src: yes
+  when: htop_installed_version|failed or htop_install_from_source
+
+- name: Build htop
+  command: chdir="~/builds/htop-{{ htop_version }}" {{ item }}
+
+  with_items:
+    - ./configure --prefix={{ userspace_local }}
+    - make {{ makeflags }}
+    - make install
+  when: htop_installed_version|failed or htop_install_from_source
+
+# If make fails make sure the makefile has includes -ltinfo in the LIBS variable
+# http://stackoverflow.com/questions/26267788/linking-fails-with-gcc-4-8-2-ld-2-24-succeeds-with-gcc-4-4-7-ld-2-20

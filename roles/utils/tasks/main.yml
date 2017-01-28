@@ -33,3 +33,6 @@
     - make {{ makeflags }}
     - make install
   when: zsh_installed_version|failed or zsh_install_from_source
+
+- include: htop.yml
+  tags: htop
