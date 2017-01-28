@@ -1,9 +1,24 @@
 # hpc-userspace
 Ansible playbook to install software in computing cluster in userspace
 
-Although the power of ansible is the idempotence. I got so frustrated
-checking the versions of installed packages in userspace that I rather
-pick the package I want to update and call it by the tags.
+This project came to realization as I was not able to get the
+administrators of my cluster to install recent software so that I
+could compile and run the software I need to do my calculations.
+
+Thus with no better alternative than installing my dependencies in
+userspace to get things working, I wrote this playbooks.
+
+This is in the limit of an automation script and a very bad package
+manager.
+
+To run everything
 
 ```bash
-ansible-playbook -i ./machines site.yml --tags gcc
+ansible-playbook -i ./machines site.yml -vv
+```
+
+To run a specific component, `htop` for example.
+
+```bash
+ansible-playbook -i ./machines site.yml --tags htop -vv
+```

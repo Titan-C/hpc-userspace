@@ -1,10 +1,16 @@
 ---
+- name: libiconv is inside includes
+  stat:
+    path: "{{ userspace_local }}/include/iconv.h"
+  register: libiconv_installed
+
 - name: Expand libiconv archive
   unarchive:
     src: http://ftp.gnu.org/pub/gnu/libiconv/libiconv-{{ libiconv_version }}.tar.gz
     dest: ~/builds/
     creates: ~/builds/libiconv-{{ libiconv_version }}
     remote_src: yes
+  when: libiconv_installed.stat.exists == False
 
 - name: Build libiconv
   command: chdir="~/builds/libiconv-{{ libiconv_version }}" {{ item }}
@@ -12,3 +18,4 @@
     - ./configure --prefix={{ userspace_local }}
     - make {{ makeflags }}
     - make install
+  when: libiconv_installed.stat.exists == False
